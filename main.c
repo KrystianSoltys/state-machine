@@ -1,52 +1,74 @@
 #include <avr/io.h>
-#include <util/delay.h>
+#include <avr/interrupt.h>
 
 #define PIN_KEY PIND
 #define PORT_LED PORTD
 
+static uint32_t ct=0, ct_ovf=0;
+
+void SetupIO();
+void SetupTimer(uint16_t ms);
 void SetupKeys(uint8_t* aK1, uint8_t* aK2, uint8_t* aK3, uint8_t* aK4);
 void SetupLeds(uint8_t L1, uint8_t L2, uint8_t L3, uint8_t L4);
 
+static uint8_t aK1,aK2,aK3,aK4,L1,L2,L3,L4;
+
+ISR (TIMER0_OVF_vect)
+{
+    ct++;
+    if(ct >= ct_ovf)
+    {
+        SetupKeys(&aK1, &aK2, &aK3, &aK4);
+
+
+        //Declarations
+        ////////////////////////////////////////
+        //    char x1,x2, Z1, Z2, Z3, Z4;
+        ////////////////////////////////////////
+
+
+        //Loop instructions
+        ////////////////////////////////////////
+        //   x1 = aK1; x2 = aK2;
+        ////////////////////////////////////////
+
+
+        //Display
+        ////////////////////////////////////////
+        //L1 = Z1; L2 = Z2; L3=Z3; L4=Z4;
+        L1 = aK1; L2 = aK2; L3 = aK3; L4=aK4;
+        ////////////////////////////////////////
+
+        SetupLeds(L1, L2, L3, L4);
+        ct=0;
+    }
+
+    TCNT0 = 0x00;
+}
 
 int main(void) {
 
+    SetupIO();
+    SetupTimer(100); //cycle duration in ms
+
+    while(1){}
+}
+
+
+
+
+void SetupIO()
+{
     PORT_LED = 0x0F;   //setup as input
     DDRD = 0xF0;    //setup as output
+}
 
-    uint8_t aK1,aK2,aK3,aK4,L1,L2,L3,L4;
-
-
-    //Declarations
-    ////////////////////////////////////////
-
-    char a,b,c,d;
-
-    ////////////////////////////////////////
-
-
-    while (1)
-    {
-
-        SetupKeys(&aK1, &aK2, &aK3, &aK4);
-
-        //Loop instructions
-        /////////////////////////////////
-
-        a=aK1; b=aK2; c=aK3; d=aK4;
-
-        //code goes here
-
-
-        L1 = a; L2 = b; L3 = c; L4 = d;
-        //////////////////////////////////
-
-
-        SetupLeds(L1, L2, L3, L4);
-
-        _delay_ms(100);
-
-    }
-
+void SetupTimer(uint16_t ms)
+{
+    TIMSK0 |= (1 << TOIE0); //TIM1 interrupts on
+    TCCR0B |= (1 << CS00);
+    ct_ovf = (F_CPU*ms) / 256 / 1000;
+    sei();  //enable interrupts
 }
 
 void SetupLeds(uint8_t L1, uint8_t L2, uint8_t L3, uint8_t L4)
@@ -71,3 +93,5 @@ void SetupKeys(uint8_t* aK1, uint8_t* aK2, uint8_t* aK3, uint8_t* aK4)
     *aK2 = !(PIN_KEY & 0x04);
     *aK1 = !(PIN_KEY & 0x08);
 }
+
+
