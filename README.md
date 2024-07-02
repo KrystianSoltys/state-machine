@@ -8,6 +8,7 @@ Board contains 4 buttons and 4 LEDs.
   <li>Don't forget to assign proper variables to keys(aKx) and LEDs (LDx)</li>
 </ol>
 Built using CMake  (make sure to set flag <b>-DCMAKE_SYSTEM_NAME=Generic</b>)
+
 ### Used hardware:
 <ul>
   <li>MCU: ATMega48PA</li>
